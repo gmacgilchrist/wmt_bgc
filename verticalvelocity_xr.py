@@ -9,7 +9,13 @@ import xarray as xr
 import numpy as np
 
 def calc_w_continuity(u,v,z,wrapx = True,wrapy = True):
+    
     ### SET UP ###
+    # Standardise name of vertical coordinates
+    if z.name=='rho2_i':
+        u=u.rename({'rho2_l':'z_l'})
+        v=v.rename({'rho2_l':'z_l'})
+        z=z.rename({'rho2_i':'z_i'})
     # Predefine a w variable, with appropriate dimensions and all values set to zero
     w = xr.DataArray(np.zeros([u.time.size,z.size,u.yh.size,v.xh.size]),coords=[u.time,z,u.yh,v.xh],dims=['time','z_i','yh','xh'])
     # Set NaNs to zero
@@ -42,8 +48,8 @@ def calc_w_continuity(u,v,z,wrapx = True,wrapy = True):
     maskv = maskv.drop('yq').rename({'yq':w.yh.name})
     # Combine mask
     mask = masku & maskv
-    # Extend the mask array to concide with the w-grid
-    # (if the bottom value on the horizontal grid is masked, so too is the bottom interface)
+    # Extend the mask array to coincide with the w-grid
+    # (if the bottom value on the u,v-grid is masked, so too is the bottom interface)
     maskw = xr.concat([mask,mask.isel(z_l=-1)],dim='z_l')
     # Set the z-coordinate to match that of the w grid
     maskw = maskw.rename({'z_l':w.z_i.name})

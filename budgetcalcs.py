@@ -5,6 +5,7 @@
 
 import xarray as xr
 from matplotlib import pyplot as plt
+import copy
 
 def calc_budget(ds, terms, tend, omit=[], vertc='zl', plot=True, errors=[-1E-12,1E-12]):
     
@@ -69,9 +70,12 @@ def calc_budget(ds, terms, tend, omit=[], vertc='zl', plot=True, errors=[-1E-12,
     
     return tend_sum, error
 
-def plot_budgetterms(ds,terms,omit=[],vertc='zl'):
+def plot_budgetterms(ds,terms,omit=[],vertc='zl',combine=None,plot_on_k=False):
     
     '''Plot the individual terms in [terms]'''
+    
+    ds = ds.copy()
+    combined = xr.zeros_like(ds[terms[0]])
     
     n=len(terms)
     
@@ -83,7 +87,7 @@ def plot_budgetterms(ds,terms,omit=[],vertc='zl'):
         for i in range(n):
             if terms[i] not in omit:
                 if n>1:
-                    im=ax[i].pcolormesh(ds.xh,ds.yh,ds[terms[i]])
+                    im=ax[i].pcolormesh(ds.xh,ds_copy.yh,ds_copy[terms[i]])
                     ax[i].set_title(terms[i])
                     plt.colorbar(im,ax=ax[i])
                 else:
@@ -92,15 +96,41 @@ def plot_budgetterms(ds,terms,omit=[],vertc='zl'):
                     plt.colorbar(im,ax=ax)
     
     else:
-        k = range(ds[vertc].size)
+        # Combine terms if desired
+        if combine is not None:
+            combined_name = combine[0]
+            for i in range(len(combine)-1):
+                combined_name += '_'+combine[i+1]
+            for i in range(len(combine)):
+                combined+=ds[combine[i]]
+            # remove combined terms from terms
+            indices = []
+            for i in range(len(terms)):
+                if terms[i] not in combine:
+                    indices.append(i)
+            terms_new = [terms[i] for i in indices]
+#             terms.append(combined_name)
+        else:
+            terms_new = terms
+        
+        n = len(terms_new)
+        
+        if plot_on_k:
+            k = range(ds[vertc].size)
+        else:
+            k = ds[vertc]
         fig,ax = plt.subplots(nrows = 1, figsize=(5,7))
         for i in range(n):
-            if terms[i] not in omit:
-                ax.plot(ds[terms[i]],k,'.-',label=terms[i])
+            if terms_new[i] not in omit:
+                ax.plot(ds[terms_new[i]],k,'.-',label=terms_new[i])
+        if combine is not None:
+            ax.plot(combined,k,'.-',label=combined_name)
         ax.legend(bbox_to_anchor=(1.04,0.5),loc='center left')
         ax.invert_yaxis()
         ax.set_title('terms')
-        
+    
+    return fig,ax
+    
 def calc_materialderivative(ds,termsLHS,signsLHS,termsRHS,signsRHS,vertc='zl',plot=True):
     
     '''Calculate the sum of terms corresponding to the material derivative.

@@ -12,7 +12,7 @@ def calc_budget(ds, terms, tend, omit=[], vertc='zl', plot=True, errors=[-1E-12,
     '''Sum the terms in [terms] and compare to [tend].
     Return the sum of the terms and the error.'''
     
-    tend_sum = 0.0
+    tend_sum = xr.zeros_like(ds[tend])
     for term in terms:
         tend_sum += ds[term]
     for term in omit:
@@ -20,11 +20,7 @@ def calc_budget(ds, terms, tend, omit=[], vertc='zl', plot=True, errors=[-1E-12,
     
     error = ds[tend]-tend_sum
     precision = xr.ufuncs.fabs(error)/xr.ufuncs.fabs(ds[tend])
-    
-    tend_sum.name = 'tend_sum'
-    error.name = 'error'
-    precision.name = 'precision'
-    
+
     if plot:
         
         if len(ds[tend].dims)>2:

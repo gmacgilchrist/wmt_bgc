@@ -65,10 +65,15 @@ def calc_P(p,l,l_i_vals,area):
     nanmask = np.isnan(l)
     # Integrate p between each layer mid-point
     P_l = histogram(l.where(~nanmask),bins=[l_l_vals],weights=(p*area).where(~nanmask),dim=['xh','yh','zl'],block_size=1)
-    # Cumulatively sum each layer, and take away from total sum to reverse the order of the summation
+    # Cumulatively sum each layer (concatenate zeros at start), and take away from total sum to reverse the order of the summation
     # i.e. this the cumulative sum of integrated [p] from largest to smallest [l_l]
+    # Concatenate zeroes
     # At the same time, reassign the coordinates to align with the layer mid-points
-    P = (P_l.sum(l.name+'_bin')-P_l.cumsum(l.name+'_bin')).assign_coords({l.name+'_bin':l_l_vals[:-1]})
+#     P = xr.concat([P_l.sum(l.name+'_bin'),(P_l.sum(l.name+'_bin')-P_l.cumsum(l.name+'_bin'))],
+#                   dim=l.name+'_bin').assign_coords({l.name+'_bin':l_l_vals})
+    P_l_cumsum = xr.concat([xr.zeros_like(P_l.isel({l.name+'_bin':0})),P_l.cumsum(l.name+'_bin')],dim=l.name+'_bin')
+    P = (P_l.sum(l.name+'_bin')-P_l_cumsum).assign_coords({l.name+'_bin':l_l_vals})
+                                                                          
     return P
 
 def calc_E_old(ds,l,l_i_vals,dl,c,area,z='depth',xdim='xh',ydim='yh',zldim='zl',zidim='zi',binning=None):

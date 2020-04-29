@@ -43,7 +43,7 @@ def calc_E(c,l,dl,l_i_vals,area,plot=False):
         E.plot()
     return E
 
-def calc_P(p,l,l_i_vals,area):
+def calc_P(p,l,l_i_vals,area,greaterthan=True):
     '''Integration of quantity [p] across volume with [l] greater than *mid-point* 
     values between layer interfaces [l_i_vals] (i.e. the center layer values).
     This is done so that the output of calc_P aligns with that of calc_G and calc_E,
@@ -57,7 +57,9 @@ def calc_P(p,l,l_i_vals,area):
     l : intensive variable, to define volume boundary
     l_i_vals : interface values of l 
         (integral is done for l[i] >= 0.5*(l_i_vals[i]+l_i_vals[i+1]))
-    area : 2d distribution of horizontal area (dx*dy)'''
+    area : 2d distribution of horizontal area (dx*dy)
+    greaterthan : boolean, True if the integral should be over contours 
+        greater than each layer interface. False for less than.'''
     
     # Get the mid-points of the layers (as defined by their interfaces)
     l_l_vals = 0.5*(l_i_vals[:-1]+l_i_vals[1:])
@@ -72,7 +74,10 @@ def calc_P(p,l,l_i_vals,area):
 #     P = xr.concat([P_l.sum(l.name+'_bin'),(P_l.sum(l.name+'_bin')-P_l.cumsum(l.name+'_bin'))],
 #                   dim=l.name+'_bin').assign_coords({l.name+'_bin':l_l_vals})
     P_l_cumsum = xr.concat([xr.zeros_like(P_l.isel({l.name+'_bin':0})),P_l.cumsum(l.name+'_bin')],dim=l.name+'_bin')
-    P = (P_l.sum(l.name+'_bin')-P_l_cumsum).assign_coords({l.name+'_bin':l_l_vals})
+    if greaterthan:
+        P = (P_l.sum(l.name+'_bin')-P_l_cumsum).assign_coords({l.name+'_bin':l_l_vals})
+    else:
+        P = P_l_cumsum.assign_coords({l.name+'_bin':l_l_vals})
                                                                           
     return P
 

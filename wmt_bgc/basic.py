@@ -101,7 +101,7 @@ def gsw_p_from_z(z, lat, geo_strf_dyn_height=0, sea_surface_geopotential=0):
     
     return xr.apply_ufunc(gsw.p_from_z,
                          z, lat, geo_strf_dyn_height, sea_surface_geopotential,
-                         dask='allowed')
+                         dask='parallelized',output_dtypes=[z.dtype])
 
 def gsw_sigma0(SA,CT):
     '''xarray wrapper for gsw.sigma0
@@ -132,6 +132,62 @@ def gsw_sigma0(SA,CT):
                          SA, CT,
                          dask='parallelized',output_dtypes=[SA.dtype])
 
+def gsw_sigma2(SA,CT):
+    '''xarray wrapper for gsw.sigma2
+    
+    From gsw function:
+    
+    Calculates potential density anomaly with reference pressure of 2000 dbar,
+    this being this particular potential density minus 1000 kg/m^3.  This
+    function has inputs of Absolute Salinity and Conservative Temperature.
+    This function uses the computationally-efficient expression for
+    specific volume in terms of SA, CT and p (Roquet et al., 2015).
+
+    Parameters
+    ----------
+    SA : array-like
+        Absolute Salinity, g/kg
+    CT : array-like
+        Conservative Temperature (ITS-90), degrees C
+
+    Returns
+    -------
+    sigma0 : array-like, kg/m^3
+        potential density anomaly with
+        respect to a reference pressure of 2000 dbar,
+        that is, this potential density - 1000 kg/m^3.'''
+    
+    return xr.apply_ufunc(gsw.sigma2,
+                         SA, CT,
+                         dask='parallelized',output_dtypes=[SA.dtype])
+
+def gsw_rho(SA,CT,p):
+    '''xarray wrapper for gsw.rho
+    
+    From gsw function:
+    
+    Calculates in-situ density from Absolute Salinity and Conservative
+    Temperature, using the computationally-efficient expression for
+    specific volume in terms of SA, CT and p  (Roquet et al., 2015).
+
+    Parameters
+    ----------
+    SA : array-like
+        Absolute Salinity, g/kg
+    CT : array-like
+        Conservative Temperature (ITS-90), degrees C
+    p : array-like
+        Sea pressure (absolute pressure minus 10.1325 dbar), dbar
+
+    Returns
+    -------
+    rho : array-like, kg/m
+        in-situ density'''
+    
+    return xr.apply_ufunc(gsw.rho,
+                         SA, CT, p,
+                         dask='parallelized',output_dtypes=[SA.dtype])
+
 def gsw_alpha(SA,CT,p):
     '''xarray wrapper for gsw.alpha
     
@@ -158,7 +214,7 @@ def gsw_alpha(SA,CT,p):
     
     return xr.apply_ufunc(gsw.alpha,
                          SA, CT, p,
-                         dask='allowed')
+                         dask='parallelized',output_dtypes=[SA.dtype])
 
 def gsw_beta(SA,CT,p):
     '''xarray wrapper for gsw.beta
@@ -187,7 +243,7 @@ def gsw_beta(SA,CT,p):
     
     return xr.apply_ufunc(gsw.beta,
                          SA, CT, p,
-                         dask='allowed')
+                         dask='parallelized',output_dtypes=[SA.dtype])
 
 # ----------------------------- #
 # Other thermodynamic functions #

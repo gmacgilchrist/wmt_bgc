@@ -37,7 +37,7 @@ def calc_E(l,dl,l_i_vals,c=None,weight=None,dims=['xh','yh','zl']):
     # Specify what should be integrated
     # (this is rather clunky with if statements, but is meant to avoid loading
     # unnecessary variables, such as dummy [c]'s or [weight]'s)
-    if c==None:
+    if c is None:
         if weight is None:
             weights = dl
         else:

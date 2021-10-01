@@ -9,4 +9,7 @@ dependencies:
   - jupyterlab
   - xarray
   - numpy
+  - matplotlib
+  - pandas
   - xgcm
+  - ipykernel
